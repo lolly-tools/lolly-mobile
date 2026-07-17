@@ -10,7 +10,11 @@
  * So we wrap the web ExportAPI and replace ONLY `download`/`file` (the delivery
  * verbs) with a real save via tauri-plugin-fs. `render()` and everything else are
  * inherited unchanged — the rasteriser is identical. Files land in the device's
- * Downloads (a "Lolly" subfolder); the user gets a toast confirming.
+ * Downloads (a "Lolly" subfolder) — which on Android is the APP-PRIVATE external
+ * files dir, invisible to most users — so after saving we hand the file to the OS
+ * share sheet via the `LollyShare` JS interface MainActivity registers
+ * (ACTION_SEND + FileProvider). No interface (iOS, older builds) → the original
+ * saved-toast behaviour.
  */
 import { createExportAPI as createWebExportAPI } from '../../web/src/bridge/export.ts';
 import { writeFile, mkdir, exists, BaseDirectory } from '@tauri-apps/plugin-fs';
@@ -43,6 +47,18 @@ function toast(message, isError) {
   } catch { /* no DOM — nothing to show */ }
 }
 
+/** Offer the OS share sheet for a just-saved export. Returns true when the native
+ *  bridge accepted (chooser opening); false = no bridge or share failed, caller toasts. */
+function shareSheet(relPath, mime, title) {
+  try {
+    const bridge = typeof window !== 'undefined' ? window.LollyShare : null;
+    if (!bridge || typeof bridge.shareFile !== 'function') return false;
+    return bridge.shareFile(relPath, String(mime || ''), String(title || '')) === true;
+  } catch {
+    return false;
+  }
+}
+
 async function saveToDownloads(blob, filename, host) {
   const name = sanitize(filename);
   const bytes = new Uint8Array(await blob.arrayBuffer());
@@ -52,7 +68,11 @@ async function saveToDownloads(blob, filename, host) {
     }
     await writeFile(`${SUBDIR}/${name}`, bytes, { baseDir: BaseDirectory.Download });
     host?.log?.('info', `Saved ${name} to Downloads/${SUBDIR}`);
-    toast(`Saved “${name}” to Downloads/${SUBDIR}`);
+    if (shareSheet(`${SUBDIR}/${name}`, blob.type, name)) {
+      toast(`Saved “${name}” — choose where to send it`);
+    } else {
+      toast(`Saved “${name}” to Downloads/${SUBDIR}`);
+    }
   } catch (err) {
     host?.log?.('error', 'Mobile export save failed', { error: String(err) });
     toast(`Couldn't save “${name}”: ${err?.message || err}`, true);
