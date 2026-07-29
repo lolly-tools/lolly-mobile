@@ -1,7 +1,117 @@
 # lolly-mobile
 
-Extracted from the [`lolly`](https://github.com/lolly-tools/lolly) monorepo and
-consumed there as a git submodule at `shells/tauri-mobile/`.
+The Tauri 2 mobile app, iOS and Android.
 
-Builds **within the monorepo** — depends on sibling workspace packages
-(`@lolly/engine`) / relative paths that only exist in that layout.
+## Read this first: there is no `src/` here
+
+**This directory contains no application code.** The app *is* the web shell. `vite.config.js` sets `root` to `../web`, so `vite` builds `shells/web/index.html` and `shells/web/src/main.ts` exactly as the PWA does, and then substitutes three modules at build time.
+
+Everything in this directory is therefore one of four things:
+
+| Path | What it is |
+|---|---|
+| `vite.config.js` | The substitution mechanism, plus dev-server middleware for `/tools/` and `/catalog/` |
+| `bridge-overrides/*.js` | The three replacement modules |
+| `src-tauri/` | The Rust side plus, for Android, a real native project under `gen/android/` |
+| `package.json`, `dist/` | Scripts and build output |
+
+If you are looking for a view, a style or an input control, it is in [`shells/web/src/`](../web/src/README.md). If you change something there, it changes here too.
+
+Own repo `lolly-mobile`, mounted in the umbrella [`lolly`](https://github.com/lolly-tools/lolly) as a git submodule at `shells/tauri-mobile/`. See the [submodule caveat](#submodule-caveat).
+
+## Entry point
+
+Two of them, in sequence.
+
+The **native** entry is `src-tauri/src/main.rs`, which calls `run()` in `src-tauri/src/lib.rs`. That is eight lines: build the Tauri app, register the `fs` and `http` plugins, run. There are no invoke handlers, because this shell has no native commands.
+
+The **frontend** entry is the web shell's, `shells/web/index.html` → `/src/main.js` → `shells/web/src/main.ts`. `src-tauri/tauri.conf.json` points `devUrl` at `http://localhost:5174` (a different port from desktop's 5173, so both dev servers can run at once) and `frontendDist` at `../dist`.
+
+On Android there is a third entry that runs before either: `MainActivity.kt`, described below.
+
+## How the bridge gets composed: build-time module substitution
+
+This is the single most confusing thing about this directory, and until now it was explained only inside the override files themselves.
+
+The web shell's `src/bridge/index.ts` composes the host from **relative sibling imports**: `./state.ts`, `./capabilities-provided.ts`, `./export.ts`. The `overrideBridgeModules` plugin in `vite.config.js` is a `resolveId` hook with `enforce: 'pre'` that intercepts those specifiers and returns a path in `bridge-overrides/` instead. The bridge index itself is unmodified and unaware.
+
+Two details of that hook are hard-won and easy to break:
+
+- It matches on the **extension-less basename** of the specifier, so it fires whether the bridge imports `./state.js` or `./state.ts`. An earlier version keyed on `.js`, and after the web shell's TypeScript migration every override silently stopped firing, so the app shipped browser IndexedDB state instead of the filesystem one.
+- It requires the **importer** to live in a `bridge/` directory. This is what makes it safe: it cannot be `resolve.alias`, because a path regex cannot match a relative specifier without also catching same-named files elsewhere in the tree.
+
+### The three overrides, and why each exists
+
+| Module | Replaced with | Why |
+|---|---|---|
+| `state` | `bridge-overrides/state.js` | Filesystem state via `tauri-plugin-fs` instead of IndexedDB, at `$APPDATA/Lolly/saved-state/<slot>.json`. The API surface has to match the web original method for method, because nothing downstream knows which implementation is running, so a missing method crashes boot. The logic (slot-name codec, legacy-filename migration, record shape, asset-ref collection) lives in `../tauri-shared/bridge-overrides/state-fs.js`, shared with the desktop shell, because the two copies were byte-identical apart from comments and every fix had to be made twice. What stays here is the `tauri-plugin-fs` adapter passed into it, which is where **mobile-specific divergence** such as iCloud sync or Android scoped storage lands, without touching desktop. It is an adapter rather than a plain import because the Tauri shells are not npm workspaces, so the parent repo cannot resolve `@tauri-apps/plugin-fs`. |
+| `capabilities-provided` | `bridge-overrides/capabilities-provided.js` | The web list, spread, with `'screen'` filtered out and `'filesystem'` added. It spreads rather than re-lists so a capability added on the web side can never silently go missing here. |
+| `export` | `bridge-overrides/export.js` | Delivery only. The web `download()` uses `URL.createObjectURL` plus an `<a download>` click, and the Android WebView has no download handler, so the click is silently dropped and every export no-ops. The override replaces `download` and `file` with a real save through `tauri-plugin-fs`, then hands the file to the OS share sheet. `render()` and the rasteriser are inherited unchanged. |
+
+### What mobile deliberately does *not* override
+
+The desktop shell also overrides `capture`, with a native headless-Chrome implementation. **Mobile does not.** There is no such implementation for iOS or Android, so this shell inherits the web `capture.ts` stub, which throws, and `'capture'` is absent from its capability list so the URL Screenshot tool stays gated off rather than failing at the tap. `'screen'` is subtracted for the same reason: display capture is `getDisplayMedia`, absent on iOS entirely and without a picker in Android's WebView.
+
+That pattern, subtract a capability rather than let a tool fail at the tap, is the rule these two shells follow. Compare [`../tauri-desktop/README.md`](../tauri-desktop/README.md) before changing it.
+
+The `export` override opens with `export * from '../../web/src/bridge/export.ts'` for the same reason the desktop one does: the substitution replaces that module for **every** importer inside `bridge/`, so it has to carry the original's whole public surface or a sibling such as `export-pptx.ts` fails the build. The star re-export forwards live bindings, which matters because the web module assigns an `export let _host`.
+
+### `vite.config.js` also carries two other plugins
+
+- **`jsToTsFallback`** maps a missing `.js` specifier to its sibling `.ts`. The web shell's `index.html` still names `/src/main.js`, and it pins `vite@^8`, which resolves that implicitly. This shell pins `vite@^5`, which does not.
+- **`bundleRepoDirs`** serves `/tools/` and `/catalog/` from the repo root in dev, and copies them into `dist/` on build with `dereference: true`, because those paths are symlink farms built by `scripts/use-profile.ts`.
+
+`build.target` and `optimizeDeps.esbuildOptions.target` are both `esnext` because harfbuzzjs, the text-to-path WASM, uses top-level await, which the default `es2020` target rejects. Without it `build:ios` fails in esbuild transpile.
+
+## The Rust side, and the Android project
+
+`src-tauri/Cargo.toml` declares `lolly-mobile`, edition 2021, with `tauri` (`devtools` feature), `tauri-plugin-fs`, `tauri-plugin-http`, `serde` and `serde_json`. There is no `headless_chrome` and no capture module, so the Rust is a 5-line `main.rs` plus an 8-line `lib.rs`. `src-tauri/capabilities/default.json` grants the `fs` verbs, `fs:scope-appdata-recursive`, `fs:scope-download-recursive` and `http:default` scoped to `https://*:*`.
+
+The interesting native code is Kotlin, and it is **committed**, which is unusual for a `gen/` directory. `src-tauri/gen/android/` is a real Android Studio project carrying hand-maintained source, and this shell's `.gitignore` says so explicitly: it ignores only `src-tauri/gen/schemas/` (pure regenerated ACL output) and lets the nested `gen/android/.gitignore` exclude the Gradle and IDE noise. Blanket-ignoring the parent directory once shadowed that and left the hand edits untracked with no way to survive a fresh clone.
+
+What is hand-maintained in there:
+
+- **`app/src/main/java/tools/lolly/mobile/MainActivity.kt`** extends `TauriActivity` and does two jobs. Inbound: it handles `ACTION_SEND` and `ACTION_SEND_MULTIPLE`, reads the shared file into a capped in-memory slot and exposes it to the WebView through a `@JavascriptInterface` object registered as **`LollyShare`**, which the web shell's share-target ingest polls. It only ingests on a genuinely fresh launch, because after a process death Android redelivers its own persisted launch Intent, which is still the original `ACTION_SEND`, and would otherwise resurrect an already-handled share. Outbound: `shareFile()` fires `ACTION_SEND` through a `FileProvider`, which is what the `export` override calls after saving.
+- **`AndroidManifest.xml`** carries the `SEND` intent filter and the `FileProvider` declaration, and **`res/xml/file_paths.xml`** the provider paths.
+
+## Run it
+
+```bash
+npm run dev:android    # tauri android dev
+npm run dev:ios        # tauri ios dev
+npm run dev:frontend   # just vite, in a desktop browser, with the mobile overrides active
+```
+
+`dev:frontend` is the fast loop for anything that is not native: it exercises the override modules with no Android or Xcode toolchain, though `tauri-plugin-fs` calls will fail without an `invoke` host.
+
+## Build it
+
+```bash
+npm run build:android   # build:frontend then tauri android build
+npm run build:ios       # build:frontend then tauri ios build
+npm run build:frontend  # frontend only, into ./dist
+```
+
+Android needs the SDK, NDK and a JDK; iOS needs Xcode and `minimumSystemVersion` 14.3 or later per `tauri.conf.json`.
+
+There is **no `tsconfig.json` in this directory and no entry in the umbrella's `npm run typecheck`.** The frontend is typechecked as part of `tsc -p shells/web`, and the three override files are `.js`, so nothing typechecks them. A mistake in an override surfaces at build time or at runtime.
+
+## Surprising things
+
+- Everything under [How the bridge gets composed](#how-the-bridge-gets-composed-build-time-module-substitution).
+- **Android's "Downloads" is not the user's Downloads.** `BaseDirectory.Download` here is the app-private external files directory, invisible to most users, which is exactly why the `export` override follows the save with a share-sheet handoff rather than just showing a saved toast. On iOS, or on a build without the `LollyShare` interface, it falls back to the toast.
+- **`src-tauri/gen/android/` is committed on purpose.** Do not add it to `.gitignore`, and do not assume a Tauri regeneration is lossless there.
+- **A state file name must not begin with a dot.** `tauri-plugin-fs` defaults `require_literal_leading_dot` to `cfg!(unix)`, true on Android, so the `$APPDATA/**` glob behind `fs:scope-appdata-recursive` cannot match a dotfile and every access to one is rejected as a forbidden path.
+- `bridge-overrides/` files are `.js` in a codebase that is otherwise TypeScript. That is not an oversight to be tidied without also adding a tsconfig and a typecheck step.
+
+## Submodule caveat
+
+This shell builds **inside the umbrella repo** and nowhere else. Its Vite root is `../web`, its overrides import `../../web/src/bridge/…`, it resolves `@lolly/engine` and `@tauri-apps/*` through the umbrella's workspaces and its own `package-lock.json`, and it copies the repo-root `tools/` and `catalog/` profile views into `dist/`. A standalone clone of `lolly-mobile` builds nothing at all.
+
+```bash
+git clone --recurse-submodules https://github.com/lolly-tools/lolly.git
+# or, in an existing clone, BEFORE npm install:
+git submodule update --init --recursive
+```
+
+Commit changes to files in this directory in the `lolly-mobile` repo, then commit the moved pointer in the umbrella. See [`CONTRIBUTING.md`](../../CONTRIBUTING.md) §4.
