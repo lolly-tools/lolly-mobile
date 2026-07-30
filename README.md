@@ -11,7 +11,7 @@ Everything in this directory is therefore one of four things:
 | Path | What it is |
 |---|---|
 | `vite.config.js` | The substitution mechanism, plus dev-server middleware for `/tools/` and `/catalog/` |
-| `bridge-overrides/*.js` | The three replacement modules |
+| `bridge-overrides/*.ts` | The three replacement modules |
 | `src-tauri/` | The Rust side plus, for Android, a real native project under `gen/android/` |
 | `package.json`, `dist/` | Scripts and build output |
 
@@ -44,9 +44,9 @@ Two details of that hook are hard-won and easy to break:
 
 | Module | Replaced with | Why |
 |---|---|---|
-| `state` | `bridge-overrides/state.js` | Filesystem state via `tauri-plugin-fs` instead of IndexedDB, at `$APPDATA/Lolly/saved-state/<slot>.json`. The API surface has to match the web original method for method, because nothing downstream knows which implementation is running, so a missing method crashes boot. The logic (slot-name codec, legacy-filename migration, record shape, asset-ref collection) lives in `../tauri-shared/bridge-overrides/state-fs.js`, shared with the desktop shell, because the two copies were byte-identical apart from comments and every fix had to be made twice. What stays here is the `tauri-plugin-fs` adapter passed into it, which is where **mobile-specific divergence** such as iCloud sync or Android scoped storage lands, without touching desktop. It is an adapter rather than a plain import because the Tauri shells are not npm workspaces, so the parent repo cannot resolve `@tauri-apps/plugin-fs`. |
-| `capabilities-provided` | `bridge-overrides/capabilities-provided.js` | The web list, spread, with `'screen'` filtered out and `'filesystem'` added. It spreads rather than re-lists so a capability added on the web side can never silently go missing here. |
-| `export` | `bridge-overrides/export.js` | Delivery only. The web `download()` uses `URL.createObjectURL` plus an `<a download>` click, and the Android WebView has no download handler, so the click is silently dropped and every export no-ops. The override replaces `download` and `file` with a real save through `tauri-plugin-fs`, then hands the file to the OS share sheet. `render()` and the rasteriser are inherited unchanged. |
+| `state` | `bridge-overrides/state.ts` | Filesystem state via `tauri-plugin-fs` instead of IndexedDB, at `$APPDATA/Lolly/saved-state/<slot>.json`. The API surface has to match the web original method for method, because nothing downstream knows which implementation is running, so a missing method crashes boot — as of the TS conversion that is enforced: `createFsStateAPI` returns the web module's own `WebStateAPI`, imported type-only, so a method added there and forgotten here fails `npm run typecheck` instead of a device boot. The logic (slot-name codec, legacy-filename migration, record shape, asset-ref collection) lives in `../tauri-shared/bridge-overrides/state-fs.ts`, shared with the desktop shell, because the two copies were byte-identical apart from comments and every fix had to be made twice. What stays here is the `tauri-plugin-fs` adapter passed into it, which is where **mobile-specific divergence** such as iCloud sync or Android scoped storage lands, without touching desktop. It is an adapter rather than a plain import because the Tauri shells are not npm workspaces, so the parent repo cannot resolve `@tauri-apps/plugin-fs`. |
+| `capabilities-provided` | `bridge-overrides/capabilities-provided.ts` | The web list, spread, with `'screen'` filtered out and `'filesystem'` added. It spreads rather than re-lists so a capability added on the web side can never silently go missing here. |
+| `export` | `bridge-overrides/export.ts` | Delivery only. The web `download()` uses `URL.createObjectURL` plus an `<a download>` click, and the Android WebView has no download handler, so the click is silently dropped and every export no-ops. The override replaces `download` and `file` with a real save through `tauri-plugin-fs`, then hands the file to the OS share sheet. `render()` and the rasteriser are inherited unchanged. |
 
 ### What mobile deliberately does *not* override
 
@@ -94,7 +94,12 @@ npm run build:frontend  # frontend only, into ./dist
 
 Android needs the SDK, NDK and a JDK; iOS needs Xcode and `minimumSystemVersion` 14.3 or later per `tauri.conf.json`.
 
-There is **no `tsconfig.json` in this directory and no entry in the umbrella's `npm run typecheck`.** The frontend is typechecked as part of `tsc -p shells/web`, and the three override files are `.js`, so nothing typechecks them. A mistake in an override surfaces at build time or at runtime.
+`tsconfig.json` here typechecks `bridge-overrides/` only — the frontend is covered by `tsc -p shells/web`. It is reached from the umbrella's `npm run typecheck` through `scripts/typecheck-tauri.ts` rather than as a bare `tsc -p` step, because the overrides import `@tauri-apps/api` and `@tauri-apps/plugin-fs` and **this shell is not an npm workspace**, so a root `npm ci` never creates its `node_modules`. That script SKIPS with a logged reason when they are absent, so a plain clone is not punished; CI installs both Tauri shells (`--omit=dev`) and then re-runs it with `--strict`, which fails on a skip, so the gate cannot quietly become a no-op. To run it locally:
+
+```bash
+npm --prefix shells/tauri-mobile ci --omit=dev   # once
+npm run typecheck:tauri
+```
 
 ## Surprising things
 
@@ -102,7 +107,7 @@ There is **no `tsconfig.json` in this directory and no entry in the umbrella's `
 - **Android's "Downloads" is not the user's Downloads.** `BaseDirectory.Download` here is the app-private external files directory, invisible to most users, which is exactly why the `export` override follows the save with a share-sheet handoff rather than just showing a saved toast. On iOS, or on a build without the `LollyShare` interface, it falls back to the toast.
 - **`src-tauri/gen/android/` is committed on purpose.** Do not add it to `.gitignore`, and do not assume a Tauri regeneration is lossless there.
 - **A state file name must not begin with a dot.** `tauri-plugin-fs` defaults `require_literal_leading_dot` to `cfg!(unix)`, true on Android, so the `$APPDATA/**` glob behind `fs:scope-appdata-recursive` cannot match a dotfile and every access to one is rejected as a forbidden path.
-- `bridge-overrides/` files are `.js` in a codebase that is otherwise TypeScript. That is not an oversight to be tidied without also adding a tsconfig and a typecheck step.
+- `vite.config.js` is still `.js` while `bridge-overrides/` is now `.ts`. The Vite config is a build-tool file (Biome excludes `**/*.config.js` repo-wide) and is not part of the shipped app; the overrides are.
 
 ## Submodule caveat
 

@@ -107,12 +107,21 @@ export default defineConfig({
   plugins: [
     jsToTsFallback(),
     overrideBridgeModules({
-      'state': resolve(__dirname, 'bridge-overrides/state.js'),
-      'capabilities-provided': resolve(__dirname, 'bridge-overrides/capabilities-provided.js'),
-      'export': resolve(__dirname, 'bridge-overrides/export.js'),
+      'state': resolve(__dirname, 'bridge-overrides/state.ts'),
+      'capabilities-provided': resolve(__dirname, 'bridge-overrides/capabilities-provided.ts'),
+      'export': resolve(__dirname, 'bridge-overrides/export.ts'),
     }),
     bundleRepoDirs(),
   ],
+  // Match shells/web/vite.config.js: the web shell renders ZzFXM songs and encodes
+  // video in MODULE workers (src/lib/zzfxm-worker.ts, src/bridge/video-encode.worker.ts),
+  // and Vite's default worker format is `iife`, which rollup refuses for a
+  // code-splitting build. This config does not extend the web one — it rebuilds the
+  // options object by hand — so every such setting has to be repeated here, and this
+  // one was not: the desktop/mobile FRONTEND build has failed with
+  // `Invalid value "iife" for option "output.format"` since the second worker landed
+  // (2026-07-20). Keep in sync with the web shell.
+  worker: { format: 'es' },
   // The dev server pre-bundles deps with esbuild, whose default target rejects
   // harfbuzzjs's top-level await (text-to-path WASM). Without this the dev server
   // boots then crashes as soon as a module pulls in harfbuzz.

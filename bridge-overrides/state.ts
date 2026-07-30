@@ -10,7 +10,7 @@
  * Storage: $APPDATA/Lolly/saved-state/<slot>.json
  *
  * The logic (slot-name codec, legacy-filename migration, record shape, asset-ref
- * collection) is shared with the desktop shell in ../../tauri-shared/bridge-overrides/state-fs.js.
+ * collection) is shared with the desktop shell in ../../tauri-shared/bridge-overrides/state-fs.ts.
  * This file used to be a copy of the desktop one, kept separate so mobile-specific
  * behaviour could diverge later — but nothing had diverged, so every fix had to be
  * made twice with nothing enforcing it. The seam survives without the duplication:
@@ -30,11 +30,12 @@ import {
   readDir,
   remove,
 } from '@tauri-apps/plugin-fs';
-import { createFsStateAPI } from '../../tauri-shared/bridge-overrides/state-fs.js';
+import { createFsStateAPI, type StateFs } from '../../tauri-shared/bridge-overrides/state-fs.ts';
+import type { StateDb, WebStateAPI } from '../../web/src/bridge/state.ts';
 
 // Paths are relative to $APPDATA/Lolly. readDirNames flattens tauri's entry
 // objects to names, which is all the shared logic reads.
-const appDataFs = {
+const appDataFs: StateFs = {
   exists: (path) => exists(path, { baseDir: BaseDirectory.AppData }),
   mkdirRecursive: (path) => mkdir(path, { baseDir: BaseDirectory.AppData, recursive: true }),
   readTextFile: (path) => readTextFile(path, { baseDir: BaseDirectory.AppData }),
@@ -45,6 +46,6 @@ const appDataFs = {
 };
 
 // createStateAPI signature matches the web shell (db param ignored — not needed here).
-export function createStateAPI(_db) {
+export function createStateAPI(_db: StateDb): WebStateAPI {
   return createFsStateAPI(appDataFs);
 }

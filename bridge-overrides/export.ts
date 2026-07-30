@@ -3,7 +3,7 @@
  * Mobile export override.
  *
  * The web export API delivers a finished file with `URL.createObjectURL(blob)` +
- * an `<a download>` click (see shells/web/src/bridge/export.js `download`). A
+ * an `<a download>` click (see shells/web/src/bridge/export.ts `download`). A
  * browser turns that into a download; the Android WebView has no download handler,
  * so the click is silently dropped — every export/download on mobile no-ops.
  *
@@ -28,12 +28,37 @@ import { writeFile, mkdir, exists, BaseDirectory } from '@tauri-apps/plugin-fs';
 // shadows the starred one per ES module semantics.
 export * from '../../web/src/bridge/export.ts';
 
+/**
+ * The host and the API shape are DERIVED from the web factory this override wraps,
+ * rather than restated. The override must remain substitutable for the web module
+ * (the resolveId plugin swaps it in for every importer inside bridge/), so a change
+ * to the web signature has to fail here at typecheck instead of at runtime in a
+ * webview. `WebHost` itself is not exported by the web module, hence Parameters<>.
+ */
+type ExportHost = Parameters<typeof createWebExportAPI>[0];
+type WebExportAPI = ReturnType<typeof createWebExportAPI>;
+
+/**
+ * The `ACTION_SEND` bridge MainActivity registers on the Android WebView via
+ * `addJavascriptInterface`. Absent on iOS and on older builds, so every call site
+ * must feature-detect — see shareSheet below.
+ */
+interface LollyShareBridge {
+  shareFile(relPath: string, mime: string, title: string): boolean;
+}
+declare global {
+  interface Window {
+    LollyShare?: LollyShareBridge;
+  }
+}
+
 const SUBDIR = 'Lolly';
 
 // Keep only filesystem-safe characters; never let a tool-supplied name traverse.
-const sanitize = (name) => (String(name || 'lolly-export').replace(/[^\w.\- ]+/g, '_') || 'lolly-export');
+const sanitize = (name: string | undefined): string =>
+  String(name || 'lolly-export').replace(/[^\w.\- ]+/g, '_') || 'lolly-export';
 
-function toast(message, isError) {
+function toast(message: string, isError?: boolean): void {
   try {
     const t = document.createElement('div');
     t.textContent = message;
@@ -49,7 +74,7 @@ function toast(message, isError) {
 
 /** Offer the OS share sheet for a just-saved export. Returns true when the native
  *  bridge accepted (chooser opening); false = no bridge or share failed, caller toasts. */
-function shareSheet(relPath, mime, title) {
+function shareSheet(relPath: string, mime: string, title: string): boolean {
   try {
     const bridge = typeof window !== 'undefined' ? window.LollyShare : null;
     if (!bridge || typeof bridge.shareFile !== 'function') return false;
@@ -59,7 +84,7 @@ function shareSheet(relPath, mime, title) {
   }
 }
 
-async function saveToDownloads(blob, filename, host) {
+async function saveToDownloads(blob: Blob, filename: string | undefined, host: ExportHost): Promise<void> {
   const name = sanitize(filename);
   const bytes = new Uint8Array(await blob.arrayBuffer());
   try {
@@ -75,16 +100,16 @@ async function saveToDownloads(blob, filename, host) {
     }
   } catch (err) {
     host?.log?.('error', 'Mobile export save failed', { error: String(err) });
-    toast(`Couldn't save “${name}”: ${err?.message || err}`, true);
+    toast(`Couldn't save “${name}”: ${err instanceof Error ? err.message : String(err)}`, true);
     throw err;
   }
 }
 
-export function createExportAPI(host) {
+export function createExportAPI(host: ExportHost): WebExportAPI {
   const web = createWebExportAPI(host);
   return {
     ...web,
-    async download(blob, filename) { await saveToDownloads(blob, filename, host); },
-    async file(blob, opts = {}) { await saveToDownloads(blob, opts.filename || 'file', host); },
+    async download(blob: Blob, filename: string) { await saveToDownloads(blob, filename, host); },
+    async file(blob: Blob, opts: { filename?: string } = {}) { await saveToDownloads(blob, opts.filename || 'file', host); },
   };
 }
