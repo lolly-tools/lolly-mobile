@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 /**
  * Filesystem-backed state for the Tauri MOBILE shell — the platform seam only.
  *
