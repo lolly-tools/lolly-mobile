@@ -31,6 +31,7 @@
                 <data android:mimeType="image/*" />
                 <data android:mimeType="application/pdf" />
                 <data android:mimeType="application/zip" />
+                <data android:mimeType="application/vnd.lolly+zip" />
                 <data android:mimeType="image/svg+xml" />
                 <data android:mimeType="application/postscript" />
                 <data android:mimeType="application/octet-stream" />

@@ -111,5 +111,20 @@ export function createExportAPI(host: ExportHost): WebExportAPI {
     ...web,
     async download(blob: Blob, filename: string) { await saveToDownloads(blob, filename, host); },
     async file(blob: Blob, opts: { filename?: string } = {}) { await saveToDownloads(blob, opts.filename || 'file', host); },
+    // Native OS share. Android's ACTION_SEND needs the bytes persisted first, so this is
+    // the same save-to-Downloads path — which already offers the native chooser via
+    // shareSheet(). Returns true unconditionally: the file is delivered to the device
+    // (and the sheet offered when the bridge is present) regardless of whether the chooser
+    // actually opened, so the web caller never falls back and double-saves.
+    async share(blob: Blob, opts: { filename?: string; mime?: string; title?: string } = {}): Promise<boolean> {
+      await saveToDownloads(blob, opts.filename || 'file', host);
+      return true;
+    },
+    // Native share is available only where the Android LollyShare bridge is present
+    // (absent on iOS / older builds). The "Send to…" button gates on this, so it never
+    // shows where a tap would only save to Downloads without offering the chooser.
+    canShare(): boolean {
+      return typeof window !== 'undefined' && typeof window.LollyShare?.shareFile === 'function';
+    },
   };
 }
