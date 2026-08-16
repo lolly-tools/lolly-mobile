@@ -5,13 +5,13 @@
  * The web export API delivers a finished file with `URL.createObjectURL(blob)` +
  * an `<a download>` click (see shells/web/src/bridge/export.ts `download`). A
  * browser turns that into a download; the Android WebView has no download handler,
- * so the click is silently dropped — every export/download on mobile no-ops.
+ * so the click is silently dropped - every export/download on mobile no-ops.
  *
  * So we wrap the web ExportAPI and replace ONLY `download`/`file` (the delivery
  * verbs) with a real save via tauri-plugin-fs. `render()` and everything else are
- * inherited unchanged — the rasteriser is identical. Files land in the device's
- * Downloads (a "Lolly" subfolder) — which on Android is the APP-PRIVATE external
- * files dir, invisible to most users — so after saving we hand the file to the OS
+ * inherited unchanged - the rasteriser is identical. Files land in the device's
+ * Downloads (a "Lolly" subfolder) - which on Android is the APP-PRIVATE external
+ * files dir, invisible to most users - so after saving we hand the file to the OS
  * share sheet via the `LollyShare` JS interface MainActivity registers
  * (ACTION_SEND + FileProvider). No interface (iOS, older builds) → the original
  * saved-toast behaviour.
@@ -20,7 +20,7 @@ import { createExportAPI as createWebExportAPI } from '../../web/src/bridge/expo
 import { writeFile, mkdir, exists, BaseDirectory } from '@tauri-apps/plugin-fs';
 
 // This override REPLACES the whole web export module for every importer inside
-// bridge/, not just for the bridge index — so it must carry that module's full
+// bridge/, not just for the bridge index - so it must carry that module's full
 // public surface, or a sibling importing one of its other exports fails the build
 // (export-pptx.ts pulls rasterizeNodeToDataUrl, _host, pureRotationDeg, …).
 // The star re-export forwards LIVE bindings, which `_host` (an `export let` the
@@ -41,7 +41,7 @@ type WebExportAPI = ReturnType<typeof createWebExportAPI>;
 /**
  * The `ACTION_SEND` bridge MainActivity registers on the Android WebView via
  * `addJavascriptInterface`. Absent on iOS and on older builds, so every call site
- * must feature-detect — see shareSheet below.
+ * must feature-detect - see shareSheet below.
  */
 interface LollyShareBridge {
   shareFile(relPath: string, mime: string, title: string): boolean;
@@ -69,7 +69,7 @@ function toast(message: string, isError?: boolean): void {
       (isError ? 'background:#7a1f1f;color:#fff' : 'background:#0c322c;color:#eafff4');
     document.body.appendChild(t);
     setTimeout(() => { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 320); }, 2800);
-  } catch { /* no DOM — nothing to show */ }
+  } catch { /* no DOM - nothing to show */ }
 }
 
 /** Offer the OS share sheet for a just-saved export. Returns true when the native
@@ -112,7 +112,7 @@ export function createExportAPI(host: ExportHost): WebExportAPI {
     async download(blob: Blob, filename: string) { await saveToDownloads(blob, filename, host); },
     async file(blob: Blob, opts: { filename?: string } = {}) { await saveToDownloads(blob, opts.filename || 'file', host); },
     // Native OS share. Android's ACTION_SEND needs the bytes persisted first, so this is
-    // the same save-to-Downloads path — which already offers the native chooser via
+    // the same save-to-Downloads path - which already offers the native chooser via
     // shareSheet(). Returns true unconditionally: the file is delivered to the device
     // (and the sheet offered when the bridge is present) regardless of whether the chooser
     // actually opened, so the web caller never falls back and double-saves.

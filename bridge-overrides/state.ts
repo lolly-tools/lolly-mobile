@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 /**
- * Filesystem-backed state for the Tauri MOBILE shell — the platform seam only.
+ * Filesystem-backed state for the Tauri MOBILE shell - the platform seam only.
  *
  * Replaces the IndexedDB state bridge (shells/web/src/bridge/state.ts) at build
  * time via the resolveId override in vite.config.js. The API surface is identical
- * to the web shell and the desktop override — tools, the engine, the gallery, the
+ * to the web shell and the desktop override - tools, the engine, the gallery, the
  * profile page and catalog sync never see which implementation is running, so every
  * method must be present or boot crashes.
  *
@@ -13,7 +13,7 @@
  * The logic (slot-name codec, legacy-filename migration, record shape, asset-ref
  * collection) is shared with the desktop shell in ../../tauri-shared/bridge-overrides/state-fs.ts.
  * This file used to be a copy of the desktop one, kept separate so mobile-specific
- * behaviour could diverge later — but nothing had diverged, so every fix had to be
+ * behaviour could diverge later - but nothing had diverged, so every fix had to be
  * made twice with nothing enforcing it. The seam survives without the duplication:
  * mobile-specific storage (iCloud sync, Android scoped storage) goes in the `fs`
  * adapter below, or as an override on the object returned by createFsStateAPI, and
@@ -46,7 +46,7 @@ const appDataFs: StateFs = {
   remove: (path) => remove(path, { baseDir: BaseDirectory.AppData }),
 };
 
-// createStateAPI signature matches the web shell (db param ignored — not needed here).
+// createStateAPI signature matches the web shell (db param ignored - not needed here).
 export function createStateAPI(_db: StateDb): WebStateAPI {
   return createFsStateAPI(appDataFs);
 }

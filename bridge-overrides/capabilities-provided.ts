@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 /**
- * Capabilities the Tauri mobile (iOS / Android) shell fulfils — overrides the web
+ * Capabilities the Tauri mobile (iOS / Android) shell fulfils - overrides the web
  * set (shells/web/src/bridge/capabilities-provided.ts) at build time via the
  * overrideBridgeModules resolveId plugin in vite.config.js.
  *
@@ -9,9 +9,9 @@
  * WITHOUT 'capture'. Page capture on desktop is native headless-Chrome
  * (shells/tauri-desktop/bridge-overrides/capture.ts); mobile ships no such
  * implementation, so it inherits the web capture.ts STUB, which throws. Advertising
- * 'capture' here would un-grey url-shot and let it fail at runtime — so it must be
- * absent. Spread the web list (don't re-list it) so a web-side addition — e.g.
- * `compose` — can never silently go missing here and gate that tool off on mobile.
+ * 'capture' here would un-grey url-shot and let it fail at runtime - so it must be
+ * absent. Spread the web list (don't re-list it) so a web-side addition - e.g.
+ * `compose` - can never silently go missing here and gate that tool off on mobile.
  *
  * 'screen' (engine v1.54) is SUBTRACTED for the same reason: display capture is
  * getDisplayMedia, which no mobile webview implements (it is absent on iOS entirely,

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 /**
- * Native site transport for the Tauri MOBILE shell — the platform seam only.
+ * Native site transport for the Tauri MOBILE shell - the platform seam only.
  *
  * Replaces the web shell's `shells/web/src/bridge/site-fetch.ts` at build time
  * via the resolveId override in vite.config.js, exactly as state.ts replaces the
  * IndexedDB state bridge. The web module is the one that does NOT have a
  * transport: on a plain PWA the Design System studio never renders the Website
  * tile at all, because a browser page cannot fetch a third-party origin
- * (plans/97 §9 — connect-src allowlists six hosts, and the decision is that no
+ * (plans/97 §9 - connect-src allowlists six hosts, and the decision is that no
  * server fetch is ever built for this).
  *
  * Mobile DOES ship this, unlike page capture: capture needs a headless Chrome
@@ -20,7 +20,7 @@
  * shared with the desktop shell. What is left here is the `@tauri-apps/api`
  * binding: this shell owns that dependency (the Tauri shells are not npm
  * workspaces, so the parent repo cannot resolve it), and this is where any
- * mobile-only behaviour would go — a shorter default timeout on a metered
+ * mobile-only behaviour would go - a shorter default timeout on a metered
  * connection, say.
  *
  * WIRING, AS OF 2026-08-09: nothing imports this yet. The web shell's Website
@@ -48,7 +48,7 @@ export type { SiteAsset, SiteFetchOptions, SiteFetchResult, SiteTransport } from
 /**
  * The shell's site transport. Present means "this shell can read a website",
  * which is what gates the studio's Website tile; it does NOT mean anything has
- * been fetched. Building it is silent and free — the fetch happens only inside
+ * been fetched. Building it is silent and free - the fetch happens only inside
  * `fetchSite`, from the button that states what will be read and by what.
  */
 export function createSiteTransport(): SiteTransport {
