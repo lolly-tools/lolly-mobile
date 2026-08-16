@@ -7,7 +7,7 @@
  * IndexedDB state bridge. The web module is the one that does NOT have a
  * transport: on a plain PWA the Design System studio never renders the Website
  * tile at all, because a browser page cannot fetch a third-party origin
- * (plans/97 §9 - connect-src allowlists six hosts, and the decision is that no
+ * (plans/97 section 9 - connect-src allowlists six hosts, and the decision is that no
  * server fetch is ever built for this).
  *
  * Mobile DOES ship this, unlike page capture: capture needs a headless Chrome

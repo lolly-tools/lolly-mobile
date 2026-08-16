@@ -111,7 +111,7 @@ export default defineConfig({
       'capabilities-provided': resolve(__dirname, 'bridge-overrides/capabilities-provided.ts'),
       'export': resolve(__dirname, 'bridge-overrides/export.ts'),
       // Native website read for the Design System studio's Website source
-      // (plans/97 §9): a Rust `site_fetch` command, no CSP and no CORS in the
+      // (plans/97 section 9): a Rust `site_fetch` command, no CSP and no CORS in the
       // way. The web module this replaces is the one WITHOUT a transport — a
       // browser page cannot fetch a third-party origin, so on a plain PWA the
       // studio never renders the tile. Unlike 'capture', mobile DOES ship this:
