@@ -20,6 +20,56 @@
 	<string>0.1.0</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Lolly uses the camera for its photo, filter and recording tools. Everything stays on your device.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Lolly uses the microphone for its voice and video recording tools. Everything stays on your device.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Lolly saves finished exports to your photo library only when you choose to.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Lolly Pack</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>tools.lolly.pack</string>
+			</array>
+		</dict>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>tools.lolly.pack</string>
+			<key>UTTypeDescription</key>
+			<string>Lolly Pack</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.archive</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>lolly</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.lolly+zip</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

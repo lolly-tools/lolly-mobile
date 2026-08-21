@@ -17,6 +17,7 @@
 		8511B69822ADD02565B05FF9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3B15AAECB7FB7DF32FED0C01 /* LaunchScreen.storyboard */; };
 		98EDC11A2864CAE9A1ADF85E /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 13537DAC44047CEC151C13FF /* assets */; };
 		ADA2947FD389E0D3AD9384C5 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A1ECD2D2D26553B8E2908B6 /* Security.framework */; };
+		BDC2D969039498759832EBBF /* libapp.a in Resources */ = {isa = PBXBuildFile; fileRef = 71E87CB25568412B11CFF2A9 /* libapp.a */; };
 		BE98A18B6BD82A236520BF05 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B670235C233883BD72F81F2 /* CoreGraphics.framework */; };
 		D22DD3D844BCC7A9B42107C7 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 597F7971FCE138231C743C7A /* MetalKit.framework */; };
 /* End PBXBuildFile section */
@@ -33,6 +34,7 @@
 		597F7971FCE138231C743C7A /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		61DCFECEC638FB168A6F90AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		659BF1D64123781C74A92BAA /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
+		71E87CB25568412B11CFF2A9 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		7915D8793D0F69107E5D100D /* lolly-mobile_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "lolly-mobile_iOS.entitlements"; sourceTree = "<group>"; };
 		869809045150643C190B2A36 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		8A1ECD2D2D26553B8E2908B6 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
@@ -73,6 +75,22 @@
 			path = ../../src;
 			sourceTree = "<group>";
 		};
+		0CBCB902475944021E39EF51 /* debug */ = {
+			isa = PBXGroup;
+			children = (
+				71E87CB25568412B11CFF2A9 /* libapp.a */,
+			);
+			path = debug;
+			sourceTree = "<group>";
+		};
+		15CD055DDE91BE8B58690BAC /* arm64 */ = {
+			isa = PBXGroup;
+			children = (
+				0CBCB902475944021E39EF51 /* debug */,
+			);
+			path = arm64;
+			sourceTree = "<group>";
+		};
 		29E8CE91F5C531CA21B4D967 /* lolly-mobile */ = {
 			isa = PBXGroup;
 			children = (
@@ -85,6 +103,7 @@
 		47032D2888597DA648115E96 /* Externals */ = {
 			isa = PBXGroup;
 			children = (
+				15CD055DDE91BE8B58690BAC /* arm64 */,
 			);
 			path = Externals;
 			sourceTree = "<group>";
@@ -152,6 +171,13 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
+		"TEMP_C3D03CA2-093D-498D-8C3D-C4F8F8F996C3" /* x86_64 */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = x86_64;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -213,6 +239,7 @@
 				11A4A15A8E58349CB7C5B49A /* Assets.xcassets in Resources */,
 				8511B69822ADD02565B05FF9 /* LaunchScreen.storyboard in Resources */,
 				98EDC11A2864CAE9A1ADF85E /* assets in Resources */,
+				BDC2D969039498759832EBBF /* libapp.a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

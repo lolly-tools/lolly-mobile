@@ -42,6 +42,33 @@ targets:
         LSRequiresIPhoneOS: true
         UILaunchStoryboardName: LaunchScreen
         UIRequiredDeviceCapabilities: [arm64, metal]
+        # plans/132 wave 1. THIS block is the durable source - xcodegen
+        # regenerates Info.plist from these properties, so keys edited into the
+        # plist directly do not survive. iOS terminates the app on first
+        # camera/mic access without the usage strings.
+        NSCameraUsageDescription: "Lolly uses the camera for its photo, filter and recording tools. Everything stays on your device."
+        NSMicrophoneUsageDescription: "Lolly uses the microphone for its voice and video recording tools. Everything stays on your device."
+        NSPhotoLibraryAddUsageDescription: "Lolly saves finished exports to your photo library only when you choose to."
+        # Standard crypto only - answers export compliance once, not per upload.
+        ITSAppUsesNonExemptEncryption: false
+        # Exports save to the app Documents folder; these expose it in the
+        # Files app (On My iPhone -> Lolly) so a saved export is findable.
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        # The .lolly pack/share type (plans/131): Lolly appears in Files/Mail
+        # "Open with". Receiving the opened file is the wave-3 handler; the
+        # in-app Open button already imports via the document picker.
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Lolly Pack
+            LSHandlerRank: Owner
+            LSItemContentTypes: [tools.lolly.pack]
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: tools.lolly.pack
+            UTTypeDescription: Lolly Pack
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [lolly]
+              public.mime-type: [application/vnd.lolly+zip]
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
