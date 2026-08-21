@@ -19,7 +19,7 @@ class MainActivity : TauriActivity() {
   private class PendingShare(val name: String, val mime: String, val bytes: ByteArray)
 
   // Single inbound-share slot, latest wins. Written on a reader thread, read from the
-  // WebView's JavaBridge thread — volatile store publishes the fully-built PendingShare.
+  // WebView's JavaBridge thread - volatile store publishes the fully-built PendingShare.
   @Volatile private var pendingShare: PendingShare? = null
   @Volatile private var webView: WebView? = null
 
@@ -27,11 +27,11 @@ class MainActivity : TauriActivity() {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
     // Only ingest on a genuinely fresh launch. setIntent() below only clears
-    // in-process state — after a process death (Android reclaiming memory while
+    // in-process state - after a process death (Android reclaiming memory while
     // backgrounded), the system redelivers its own persisted launch Intent, which
     // is still the ORIGINAL ACTION_SEND, and would otherwise resurrect an
     // already-handled share out of nowhere. onNewIntent (live delivery while the
-    // activity is already running) is unaffected — it has no such guard.
+    // activity is already running) is unaffected - it has no such guard.
     if (savedInstanceState == null) ingestShareIntent(intent)
   }
 
@@ -45,7 +45,7 @@ class MainActivity : TauriActivity() {
     // The export bridge override (bridge-overrides/export.js) calls this after saving a
     // file so the user gets the OS share sheet instead of hunting for the app-private
     // Downloads dir. Exposed to every script in the WebView, so it only ever shares
-    // files it can prove live under our own export root — nothing else.
+    // files it can prove live under our own export root - nothing else.
     webView.addJavascriptInterface(ShareBridge(), "LollyShare")
   }
 
@@ -63,7 +63,7 @@ class MainActivity : TauriActivity() {
         @Suppress("DEPRECATION") intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
       }
       if ((uris?.size ?: 0) > 1) {
-        Toast.makeText(this, "Lolly imports one file at a time — using the first", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Lolly imports one file at a time - using the first", Toast.LENGTH_LONG).show()
       }
       uri = uris?.firstOrNull()
     } else {
@@ -73,7 +73,7 @@ class MainActivity : TauriActivity() {
         @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_STREAM)
       }
     }
-    // Files only in v1 (EXTRA_TEXT-only shares ignored); content:// only — a file:// Uri
+    // Files only in v1 (EXTRA_TEXT-only shares ignored); content:// only - a file:// Uri
     // from another app could point into our own private storage.
     if (uri == null || uri.scheme != "content") return
     val intentType = intent.type
@@ -141,8 +141,8 @@ class MainActivity : TauriActivity() {
   inner class ShareBridge {
     /**
      * Share a previously exported file via ACTION_SEND. `relPath` is relative to the
-     * export root — getExternalFilesDir(null)/Download, the exact directory
-     * tauri-plugin-fs BaseDirectory.Download resolves to on Android — and must stay
+     * export root - getExternalFilesDir(null)/Download, the exact directory
+     * tauri-plugin-fs BaseDirectory.Download resolves to on Android - and must stay
      * inside it (canonical-path containment; symlinks and ../ both fail closed).
      * Returns false when the file is missing/out-of-root so the JS side can fall
      * back to its saved-toast message.

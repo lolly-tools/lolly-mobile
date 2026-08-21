@@ -94,7 +94,7 @@ async function saveToDownloads(blob: Blob, filename: string | undefined, host: E
     await writeFile(`${SUBDIR}/${name}`, bytes, { baseDir: BaseDirectory.Download });
     host?.log?.('info', `Saved ${name} to Downloads/${SUBDIR}`);
     if (shareSheet(`${SUBDIR}/${name}`, blob.type, name)) {
-      toast(`Saved “${name}” — choose where to send it`);
+      toast(`Saved “${name}” - choose where to send it`);
     } else {
       toast(`Saved “${name}” to Downloads/${SUBDIR}`);
     }

@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite';
-import { resolve, extname, dirname } from 'node:path';
-import { existsSync, statSync, readFileSync, cpSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { existsSync } from 'node:fs';
+import {
+  embedContentPlugins, injectModelsBase, resolveEmbedMode,
+} from '../tauri-shared/vite-embed.mjs';
 
 const webShell  = resolve(__dirname, '../web');
 const repoRoot  = resolve(__dirname, '../..');
@@ -19,56 +22,23 @@ function jsToTsFallback() {
       let jsPath;
       if (source.startsWith('/')) jsPath = resolve(webShell, source.slice(1));
       else if (source.startsWith('.') && importer) jsPath = resolve(dirname(importer.split('?')[0]), source);
-      else return null; // bare / node_modules specifier — leave alone
-      if (existsSync(jsPath)) return null; // a real .js — don't touch it
+      else return null; // bare / node_modules specifier - leave alone
+      if (existsSync(jsPath)) return null; // a real .js - don't touch it
       const tsPath = jsPath.slice(0, -3) + '.ts';
       return existsSync(tsPath) ? tsPath : null;
     },
   };
 }
 
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js':   'application/javascript',
-  '.json': 'application/json',
-  '.css':  'text/css',
-  '.svg':  'image/svg+xml',
-  '.png':  'image/png',
-  '.jpg':  'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.webp': 'image/webp',
-  '.woff': 'font/woff',
-  '.woff2':'font/woff2',
-  '.ttf':  'font/ttf',
-};
-
-// In dev the Vite dev-server middleware handles /tools/ and /catalog/ requests.
-// In production they must be copied into dist/ so the Tauri WebView can reach them.
-function bundleRepoDirs() {
-  return {
-    name: 'bundle-repo-dirs',
-    configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        const url = req.url?.split('?')[0];
-        if (!url?.startsWith('/tools/') && !url?.startsWith('/catalog/')) return next();
-        const filePath = resolve(repoRoot, url.slice(1));
-        if (!existsSync(filePath) || !statSync(filePath).isFile()) return next();
-        const data = readFileSync(filePath);
-        res.setHeader('Content-Type', MIME[extname(filePath)] ?? 'application/octet-stream');
-        res.setHeader('Content-Length', data.byteLength);
-        res.end(data);
-      });
-    },
-    writeBundle(options) {
-      const outDir = options.dir ?? resolve(__dirname, 'dist');
-      for (const dir of ['catalog', 'tools']) {
-        // dereference: tools/ and catalog are profile VIEWS (symlink farms built
-        // by scripts/use-profile.ts) — copy the real files, not the links.
-        cpSync(resolve(repoRoot, dir), resolve(outDir, dir), { recursive: true, dereference: true });
-      }
-    },
-  };
-}
+// Embedded content mode (plans/131 WP-A) - the machinery lives in
+// ../tauri-shared/vite-embed.mjs, SHARED with the desktop shell so the two
+// configs cannot drift (the old hand-kept copy here still had the cpSync
+// dereference bug and embedded the ACTIVE profile whole). Mobile is the
+// app-store shell, so its default is 'neutral' - the blank-brand toolset +
+// a ~1 MB seed catalog, with brand content arriving from an instance or a
+// loaded .lolly pack. LOLLY_EMBED_CATALOG=profile overrides for an internal
+// brand-embedded build.
+const EMBED_CATALOG = resolveEmbedMode(process.env.LOLLY_EMBED_CATALOG, 'neutral');
 
 // Swap specific web-shell bridge modules for Tauri-native implementations.
 // Implemented as a resolveId plugin rather than resolve.alias because the bridge
@@ -101,10 +71,17 @@ function overrideBridgeModules(map) {
   };
 }
 
+// The mobile shell ships a SMALL bundle (the shared pruneEmbeddedDownloads
+// strips dist/models/), so the on-device ML models must be fetched from a
+// model host at runtime rather than same-origin - exactly the desktop
+// arrangement. An override may be passed in the environment (VITE_MODELS_BASE).
+const MODELS_HOST = process.env.VITE_MODELS_BASE ?? 'https://lolly.tools';
+
 export default defineConfig({
   root: webShell,
   publicDir: resolve(webShell, 'public'),
   plugins: [
+    injectModelsBase(MODELS_HOST),
     jsToTsFallback(),
     overrideBridgeModules({
       'state': resolve(__dirname, 'bridge-overrides/state.ts'),
@@ -112,35 +89,29 @@ export default defineConfig({
       'export': resolve(__dirname, 'bridge-overrides/export.ts'),
       // Native website read for the Design System studio's Website source
       // (plans/97 section 9): a Rust `site_fetch` command, no CSP and no CORS in the
-      // way. The web module this replaces is the one WITHOUT a transport — a
-      // browser page cannot fetch a third-party origin, so on a plain PWA the
-      // studio never renders the tile. Unlike 'capture', mobile DOES ship this:
-      // a site fetch needs only an HTTP client, not a headless Chrome.
+      // way. Unlike 'capture', mobile DOES ship this: a site fetch needs only an
+      // HTTP client, not a headless Chrome.
       //
-      // THIS KEY MATCHES NOTHING TODAY (checked 2026-08-09). The plugin only
-      // rewrites an import made from inside a bridge/ dir, and there is no
-      // shells/web/src/bridge/site-fetch.ts to import — so the override never
-      // fires. It is left in place for when that module is added; adding it is
-      // what turns this back on, and if it is ever renamed this key must follow
-      // it (exactly how the '.js' keying above once shipped web IndexedDB
-      // state). The failure mode is quiet either way — a missing tile, not a
-      // crash — which is why the Website source does NOT depend on it: the web
-      // shell probes Tauri's own __TAURI_INTERNALS__.invoke global at runtime
-      // (detectSiteTransport in lib/design-system/sources/website.ts) and
-      // invokes site_fetch directly. See tauri-shared/bridge-overrides/site-fetch.ts.
+      // THIS KEY MATCHES NOTHING TODAY (checked 2026-08-09; see the desktop
+      // config's identical entry for the full story). The web shell probes
+      // __TAURI_INTERNALS__.invoke at runtime instead, so the tile works
+      // regardless; the key waits for a shells/web/src/bridge/site-fetch.ts.
       'site-fetch': resolve(__dirname, 'bridge-overrides/site-fetch.ts'),
     }),
-    bundleRepoDirs(),
+    ...embedContentPlugins({
+      repoRoot,
+      outDirDefault: resolve(__dirname, 'dist'),
+      mode: EMBED_CATALOG,
+    }),
   ],
   // Match shells/web/vite.config.js: the web shell renders ZzFXM songs and encodes
   // video in MODULE workers (src/lib/zzfxm-worker.ts, src/bridge/video-encode.worker.ts),
   // and Vite's default worker format is `iife`, which rollup refuses for a
-  // code-splitting build. This config does not extend the web one — it rebuilds the
-  // options object by hand — so every such setting has to be repeated here, and this
-  // one was not: the desktop/mobile FRONTEND build has failed with
-  // `Invalid value "iife" for option "output.format"` since the second worker landed
-  // (2026-07-20). Keep in sync with the web shell.
-  worker: { format: 'es' },
+  // code-splitting build. This config does not extend the web one - it rebuilds the
+  // options object by hand - so every such setting has to be repeated here. The
+  // worker build needs injectModelsBase too (top-level `define`/plugins are not
+  // forwarded to worker bundles) or the speech workers 404 for /models/.
+  worker: { format: 'es', plugins: () => [injectModelsBase(MODELS_HOST)] },
   // The dev server pre-bundles deps with esbuild, whose default target rejects
   // harfbuzzjs's top-level await (text-to-path WASM). Without this the dev server
   // boots then crashes as soon as a module pulls in harfbuzz.
@@ -157,7 +128,7 @@ export default defineConfig({
     emptyOutDir: true,
     // iOS WKWebView / Android System WebView are modern WebKit/Chromium, so target
     // esnext. The default (es2020) forbids top-level await, which harfbuzzjs relies
-    // on — without this `vite build` fails in esbuild transpile, breaking build:ios.
+    // on - without this `vite build` fails in esbuild transpile, breaking build:ios.
     target: 'esnext',
   },
 });
