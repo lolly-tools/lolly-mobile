@@ -11,13 +11,13 @@
 		0A68CD87C41DB657BFC050A9 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 869809045150643C190B2A36 /* Metal.framework */; };
 		11A4A15A8E58349CB7C5B49A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1592F5B1707F021502B040B4 /* Assets.xcassets */; };
 		3130E0F09303CF4E53DD4688 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D25CBC3ECABCCE6171D4E289 /* WebKit.framework */; };
+		4D0052D208E76562341435E8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 57473C84B7F420BD434F3697 /* PrivacyInfo.xcprivacy */; };
 		5E7FC298982A4F23C39E12BB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06A668C3B4CEDC5EE6EFC282 /* UIKit.framework */; };
 		5E8957380617369A97A64AEC /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 108DC69D6F77FC78B32AFCBC /* main.mm */; };
 		6D43E07FA54E0F1D0DCEE2D1 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 23DEA0E8DDBC3C338CCED608 /* libapp.a */; };
 		8511B69822ADD02565B05FF9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3B15AAECB7FB7DF32FED0C01 /* LaunchScreen.storyboard */; };
 		98EDC11A2864CAE9A1ADF85E /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 13537DAC44047CEC151C13FF /* assets */; };
 		ADA2947FD389E0D3AD9384C5 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A1ECD2D2D26553B8E2908B6 /* Security.framework */; };
-		BDC2D969039498759832EBBF /* libapp.a in Resources */ = {isa = PBXBuildFile; fileRef = 71E87CB25568412B11CFF2A9 /* libapp.a */; };
 		BE98A18B6BD82A236520BF05 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B670235C233883BD72F81F2 /* CoreGraphics.framework */; };
 		D22DD3D844BCC7A9B42107C7 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 597F7971FCE138231C743C7A /* MetalKit.framework */; };
 /* End PBXBuildFile section */
@@ -31,10 +31,10 @@
 		23DEA0E8DDBC3C338CCED608 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		3B15AAECB7FB7DF32FED0C01 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3B670235C233883BD72F81F2 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		57473C84B7F420BD434F3697 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		597F7971FCE138231C743C7A /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		61DCFECEC638FB168A6F90AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		659BF1D64123781C74A92BAA /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
-		71E87CB25568412B11CFF2A9 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		7915D8793D0F69107E5D100D /* lolly-mobile_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "lolly-mobile_iOS.entitlements"; sourceTree = "<group>"; };
 		869809045150643C190B2A36 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		8A1ECD2D2D26553B8E2908B6 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
@@ -75,22 +75,6 @@
 			path = ../../src;
 			sourceTree = "<group>";
 		};
-		0CBCB902475944021E39EF51 /* debug */ = {
-			isa = PBXGroup;
-			children = (
-				71E87CB25568412B11CFF2A9 /* libapp.a */,
-			);
-			path = debug;
-			sourceTree = "<group>";
-		};
-		15CD055DDE91BE8B58690BAC /* arm64 */ = {
-			isa = PBXGroup;
-			children = (
-				0CBCB902475944021E39EF51 /* debug */,
-			);
-			path = arm64;
-			sourceTree = "<group>";
-		};
 		29E8CE91F5C531CA21B4D967 /* lolly-mobile */ = {
 			isa = PBXGroup;
 			children = (
@@ -103,7 +87,6 @@
 		47032D2888597DA648115E96 /* Externals */ = {
 			isa = PBXGroup;
 			children = (
-				15CD055DDE91BE8B58690BAC /* arm64 */,
 			);
 			path = Externals;
 			sourceTree = "<group>";
@@ -151,6 +134,7 @@
 			children = (
 				61DCFECEC638FB168A6F90AB /* Info.plist */,
 				7915D8793D0F69107E5D100D /* lolly-mobile_iOS.entitlements */,
+				57473C84B7F420BD434F3697 /* PrivacyInfo.xcprivacy */,
 			);
 			path = "lolly-mobile_iOS";
 			sourceTree = "<group>";
@@ -171,11 +155,11 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
-		"TEMP_C3D03CA2-093D-498D-8C3D-C4F8F8F996C3" /* x86_64 */ = {
+		"TEMP_0D8BA19B-A4F7-42AB-B86D-5AAD87BF22AE" /* arm64 */ = {
 			isa = PBXGroup;
 			children = (
 			);
-			path = x86_64;
+			path = arm64;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -210,6 +194,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					80AFE514E7E436EBE34AF486 = {
+						DevelopmentTeam = 2FCG2XLK6Y;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 6FDD6888CA4F69F353F15DC0 /* Build configuration list for PBXProject "lolly-mobile" */;
@@ -238,8 +226,8 @@
 			files = (
 				11A4A15A8E58349CB7C5B49A /* Assets.xcassets in Resources */,
 				8511B69822ADD02565B05FF9 /* LaunchScreen.storyboard in Resources */,
+				4D0052D208E76562341435E8 /* PrivacyInfo.xcprivacy in Resources */,
 				98EDC11A2864CAE9A1ADF85E /* assets in Resources */,
-				BDC2D969039498759832EBBF /* libapp.a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,7 +314,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -388,7 +376,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -410,6 +398,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "lolly-mobile_iOS/lolly-mobile_iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "2FCG2XLK6Y";
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -441,6 +431,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "lolly-mobile_iOS/lolly-mobile_iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "2FCG2XLK6Y";
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (

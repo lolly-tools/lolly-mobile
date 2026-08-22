@@ -2,7 +2,7 @@ name: lolly-mobile
 options:
   bundleIdPrefix: tools.lolly.mobile
   deploymentTarget:
-    iOS: 14.3
+    iOS: "15.0"
 fileGroups: [../../src]
 configs:
   debug: debug
@@ -30,12 +30,22 @@ targets:
     sources:
       - path: Sources
       - path: Assets.xcassets
+      # The static libs are LINKED (dependencies: libapp.a + LIBRARY_SEARCH_PATHS),
+      # never bundle resources - without the exclude, xcodegen snapshots every
+      # Externals/<arch>/<config>/libapp.a as a resource copy and two configs
+      # collide on one destination ("Multiple commands produce ... libapp.a").
       - path: Externals
+        excludes:
+          - "**/*.a"
       - path: lolly-mobile_iOS
       - path: assets
         buildPhase: resources
         type: folder
       - path: LaunchScreen.storyboard
+      # plans/132 wave 4: the privacy manifest must ship as a bundle RESOURCE
+      # (App Store validation reads it from the app root).
+      - path: lolly-mobile_iOS/PrivacyInfo.xcprivacy
+        buildPhase: resources
     info:
       path: lolly-mobile_iOS/Info.plist
       properties:
@@ -88,6 +98,11 @@ targets:
         RUST_LOG: info
     settings:
       base:
+        # Signing (plans/132 wave 4): Andy's Apple Developer team, automatic
+        # provisioning. Mirrored in tauri.conf.json bundle>iOS>developmentTeam;
+        # this is the durable copy xcodegen writes into the project.
+        DEVELOPMENT_TEAM: 2FCG2XLK6Y
+        CODE_SIGN_STYLE: Automatic
         ENABLE_BITCODE: false
         ARCHS: [arm64]
         VALID_ARCHS: arm64 

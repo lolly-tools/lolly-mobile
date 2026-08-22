@@ -81,7 +81,7 @@ function toast(message: string, isError?: boolean): void {
     const t = document.createElement('div');
     t.textContent = message;
     t.style.cssText =
-      'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);' +
+      'position:fixed;left:50%;bottom:calc(24px + var(--safe-bottom));transform:translateX(-50%);' +
       'z-index:2147483647;padding:12px 18px;border-radius:12px;max-width:90vw;text-align:center;' +
       'font:14px/1.35 SUSE,system-ui,-apple-system,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.35);' +
       (isError ? 'background:#7a1f1f;color:#fff' : 'background:#0c322c;color:#eafff4');
