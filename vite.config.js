@@ -49,11 +49,12 @@ const EMBED_CATALOG = resolveEmbedMode(process.env.LOLLY_EMBED_CATALOG, 'neutral
 // (`vite build`) and the root-relative URL importer the dev server passes
 // (`/src/bridge/index.js`).
 //
-// Mobile overrides ONLY state.js (filesystem state via tauri-plugin-fs) and
-// capabilities-provided.js (adds 'filesystem'). It deliberately does NOT override
-// capture.js: page capture on desktop is native headless-Chrome, which does not
-// exist on iOS/Android, so mobile inherits the web capture.js stub and the
-// 'capture' capability stays unavailable (url-shot stays gated off).
+// Mobile overrides state.js (filesystem state via tauri-plugin-fs),
+// capabilities-provided.js (adds 'filesystem'), export.js and site-fetch.js. It
+// does NOT yet override capture.js: bridge-overrides/capture.ts is staged for
+// url-shot-on-iOS, but the native command it invokes isn't built yet (objc2-web-kit's
+// WKWebView is macOS-only; see capabilities-provided.ts), so mobile keeps the web
+// capture.ts stub and 'capture' stays unavailable.
 function overrideBridgeModules(map) {
   return {
     name: 'override-bridge-modules',

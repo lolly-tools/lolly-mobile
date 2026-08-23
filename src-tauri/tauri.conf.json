@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Lolly",
-  "version": "0.1.1",
-  "identifier": "tools.lolly.mobile",
+  "version": "0.1.2",
+  "identifier": "tools.lolly.desktop",
   "build": {
     "beforeDevCommand": "npm run dev:frontend",
     "beforeBuildCommand": "npm run build:frontend",
