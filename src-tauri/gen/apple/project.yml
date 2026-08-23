@@ -96,8 +96,8 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        CFBundleShortVersionString: 0.1.0
-        CFBundleVersion: "0.1.0"
+        CFBundleShortVersionString: 0.1.1
+        CFBundleVersion: "0.1.1"
     entitlements:
       path: lolly-mobile_iOS/lolly-mobile_iOS.entitlements
     scheme:
