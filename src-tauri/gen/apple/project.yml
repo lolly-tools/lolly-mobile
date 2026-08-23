@@ -59,6 +59,14 @@ targets:
         NSCameraUsageDescription: "Lolly uses the camera for its photo, filter and recording tools. Everything stays on your device."
         NSMicrophoneUsageDescription: "Lolly uses the microphone for its voice and video recording tools. Everything stays on your device."
         NSPhotoLibraryAddUsageDescription: "Lolly saves finished exports to your photo library only when you choose to."
+        # DEV BUILDS ONLY reach a dev server over the LAN (`tauri ios dev` loads the
+        # frontend from the Mac at http://<lan-ip>:5174). iOS gates any local-network
+        # access behind this permission, and on iOS 14+ the prompt never appears -
+        # and the app never shows in Settings > Privacy & Security > Local Network -
+        # UNLESS this usage string is declared. A shipped (TestFlight/App Store) build
+        # embeds the frontend and never touches the LAN, so the permission is never
+        # triggered there; the key is inert in production.
+        NSLocalNetworkUsageDescription: "Development builds of Lolly load their interface from a local development server on your network. Shipped builds never use your local network."
         # Standard crypto only - answers export compliance once, not per upload.
         ITSAppUsesNonExemptEncryption: false
         # Exports save to the app Documents folder; these expose it in the

@@ -16,6 +16,7 @@
     "fs:allow-read-dir",
     "fs:scope-appdata-recursive",
     "fs:scope-download-recursive",
+    "fs:scope-document-recursive",
     {
       "identifier": "http:default",
       "allow": [{ "url": "https://*:*" }]

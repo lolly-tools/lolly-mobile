@@ -119,8 +119,21 @@ export default defineConfig({
     esbuildOptions: { target: 'esnext' },
   },
   server: {
+    // On-device dev (a physical iPhone/Android) loads the frontend over the LAN,
+    // not localhost: `tauri ios dev` detects the Mac's LAN IP, exports it as
+    // TAURI_DEV_HOST, and points the app there. Vite must actually LISTEN on that
+    // interface or the device (and tauri's health check) time out - the failure
+    // that read "Could not connect to http://<lan-ip>:5174 after 180s". Bind to
+    // TAURI_DEV_HOST when set, else 0.0.0.0 so the device can still reach it; the
+    // simulator (localhost) is covered by 0.0.0.0 too. Pin HMR to the same host so
+    // the websocket doesn't try to reach `localhost` from the phone.
+    host: process.env.TAURI_DEV_HOST || '0.0.0.0',
     // Separate port from desktop dev server to allow running both simultaneously.
     port: 5174,
+    strictPort: true,
+    ...(process.env.TAURI_DEV_HOST
+      ? { hmr: { protocol: 'ws', host: process.env.TAURI_DEV_HOST, port: 5183 } }
+      : {}),
     fs: { allow: [repoRoot] },
   },
   build: {
