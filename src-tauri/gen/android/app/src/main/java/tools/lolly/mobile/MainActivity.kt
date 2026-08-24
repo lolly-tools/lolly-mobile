@@ -26,6 +26,27 @@ class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
+    // Hardware/gesture Back walks the WEB layer first: the shell pushes one
+    // same-URL history entry per open overlay (components/modal.ts +
+    // lib/overlay-back.ts), so canGoBack() is true while a dialog or menu is up
+    // and goBack() fires the popstate that closes just that overlay; with none
+    // open it walks the in-app route history. TauriActivity's default never
+    // consults WebView history, which made every Back press exit the app.
+    // Registered after super.onCreate so this callback outranks any default
+    // (dispatcher order is last-in-first-served); at the true history root it
+    // steps aside and the system default (exit) runs.
+    onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+      override fun handleOnBackPressed() {
+        val wv = webView
+        if (wv != null && wv.canGoBack()) {
+          wv.goBack()
+        } else {
+          isEnabled = false
+          onBackPressedDispatcher.onBackPressed()
+          isEnabled = true
+        }
+      }
+    })
     // Only ingest on a genuinely fresh launch. setIntent() below only clears
     // in-process state - after a process death (Android reclaiming memory while
     // backgrounded), the system redelivers its own persisted launch Intent, which
