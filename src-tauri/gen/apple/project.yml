@@ -71,6 +71,11 @@ targets:
         # embeds the frontend and never touches the LAN, so the permission is never
         # triggered there; the key is inert in production.
         NSLocalNetworkUsageDescription: "Development builds of Lolly load their interface from a local development server on your network. Shipped builds never use your local network."
+        # plans/146: the Neurospicy player keeps streaming web radio while the app is
+        # backgrounded/locked (podcast-style). iOS only lets the WKWebView's <audio>
+        # element sound in the background when this mode is declared AND the app's audio
+        # session is the .playback category (set in Sources/lolly-mobile/main.mm).
+        UIBackgroundModes: [audio]
         # The binary bundles standard-algorithm crypto beyond the OS's (rustls/ring,
         # engine zip AES + ZipCrypto), so the app USES non-exempt encryption - mass
         # market, self-classified ECCN 5D992.c. See appstore/encryption-compliance.html.
@@ -138,6 +143,10 @@ targets:
       - sdk: Security.framework
       - sdk: UIKit.framework
       - sdk: WebKit.framework
+      # plans/146: main.mm sets the .playback audio session for background radio. This
+      # setup links frameworks explicitly (auto-linking is off), so AVAudioSession needs
+      # AVFoundation named here or the link fails with undefined _AVAudioSession symbols.
+      - sdk: AVFoundation.framework
     preBuildScripts:
       - script: npm run -- tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths "${FRAMEWORK_SEARCH_PATHS:?}" --header-search-paths "${HEADER_SEARCH_PATHS:?}" --gcc-preprocessor-definitions "${GCC_PREPROCESSOR_DEFINITIONS:-}" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
         name: Build Rust Code

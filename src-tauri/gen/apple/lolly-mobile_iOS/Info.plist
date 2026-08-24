@@ -75,6 +75,10 @@
 	<string>Lolly uses the microphone for its voice and video recording tools. Everything stays on your device.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Lolly saves finished exports to your photo library only when you choose to.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
