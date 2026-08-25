@@ -1,10 +1,12 @@
 name: lolly-mobile
 options:
-  # Shared with the macOS app DELIBERATELY (2026-08-23): the App Store Connect
-  # record "Lolly Tools" is one universal-purchase listing covering macOS + iOS,
-  # and Apple requires the platforms of one listing to share a bundle identifier.
-  # tools.lolly.mobile exists only as a leftover signing id - never upload with it.
-  bundleIdPrefix: tools.lolly.desktop
+  # Two SEPARATE App Store listings (Andy, 2026-08-25): the Mac (tauri-desktop) app
+  # ships as tools.lolly.desktop, and this iOS/iPadOS app as tools.lolly.mobile - NOT
+  # one shared universal-purchase id. Two listings buy the desktop app room to carry
+  # features iOS can't. tauri.conf.json's identifier (tools.lolly.mobile) is the source
+  # of truth tauri applies at build; this prefix + the explicit PRODUCT_BUNDLE_IDENTIFIER
+  # below are kept in step so the regenerated project matches what actually ships.
+  bundleIdPrefix: tools.lolly.mobile
   deploymentTarget:
     iOS: "15.0"
 fileGroups: [../../src]
@@ -15,7 +17,7 @@ settingGroups:
   app:
     base:
       PRODUCT_NAME: Lolly
-      PRODUCT_BUNDLE_IDENTIFIER: tools.lolly.desktop
+      PRODUCT_BUNDLE_IDENTIFIER: tools.lolly.mobile
 targetTemplates:
   app:
     type: application
