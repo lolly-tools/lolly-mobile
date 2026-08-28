@@ -22,6 +22,21 @@
                 <!-- AndroidTV support -->
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
+            <!-- App Links (plan 171): a tapped https://lolly.tools link opens in the app.
+                 Scoped to the canonical shareable paths - /t/<id> (every tool link, packed
+                 z/zx included) and /design, the one vanity-path tool. autoVerify needs
+                 /.well-known/assetlinks.json on lolly.tools to name this package + signing
+                 cert; until the release fingerprint is published there, Android falls back
+                 to the manual "Open supported links" toggle rather than auto-opening. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="lolly.tools" />
+                <data android:pathPrefix="/t/" />
+                <data android:path="/design" />
+            </intent-filter>
             <!-- Inbound share target: broad on purpose so Lolly appears wherever files are
                  shared. SEND_MULTIPLE is accepted but only the first stream is imported (v1). -->
             <intent-filter>

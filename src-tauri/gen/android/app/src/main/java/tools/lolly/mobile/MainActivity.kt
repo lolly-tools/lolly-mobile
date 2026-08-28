@@ -21,6 +21,9 @@ class MainActivity : TauriActivity() {
   // Single inbound-share slot, latest wins. Written on a reader thread, read from the
   // WebView's JavaBridge thread - volatile store publishes the fully-built PendingShare.
   @Volatile private var pendingShare: PendingShare? = null
+  // Single inbound App-Link slot (ACTION_VIEW https://lolly.tools/t/…), latest wins,
+  // consumed on read - the same cold-poll + warm-event pattern as the share slot.
+  @Volatile private var pendingLink: String? = null
   @Volatile private var webView: WebView? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,12 +56,16 @@ class MainActivity : TauriActivity() {
     // is still the ORIGINAL ACTION_SEND, and would otherwise resurrect an
     // already-handled share out of nowhere. onNewIntent (live delivery while the
     // activity is already running) is unaffected - it has no such guard.
-    if (savedInstanceState == null) ingestShareIntent(intent)
+    if (savedInstanceState == null) {
+      ingestShareIntent(intent)
+      ingestViewIntent(intent)
+    }
   }
 
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     ingestShareIntent(intent)
+    ingestViewIntent(intent)
   }
 
   override fun onWebViewCreate(webView: WebView) {
@@ -109,6 +116,25 @@ class MainActivity : TauriActivity() {
         wv.evaluateJavascript("window.dispatchEvent(new Event('lolly-share-target'))", null)
       }
     }.start()
+  }
+
+  /** Inbound ACTION_VIEW App Link (plan 171): stash the https URL for the JS side,
+   *  which maps its path+query+hash onto the in-app route. Same latest-wins slot +
+   *  cold-poll/warm-event pattern as the share target. Defensive re-checks even
+   *  though the manifest filter already scopes host and scheme. */
+  private fun ingestViewIntent(intent: Intent?) {
+    if (intent?.action != Intent.ACTION_VIEW) return
+    val uri = intent.data ?: return
+    if (uri.scheme != "https" && uri.scheme != "http") return
+    val url = uri.toString()
+    if (url.length > MAX_LINK_CHARS) return
+    // Consume so an activity recreate doesn't re-open the same link.
+    setIntent(Intent(this, javaClass))
+    pendingLink = url
+    val wv = webView ?: return
+    runOnUiThread {
+      wv.evaluateJavascript("window.dispatchEvent(new Event('lolly-deep-link'))", null)
+    }
   }
 
   private fun shareDisplayName(uri: Uri): String {
@@ -216,10 +242,21 @@ class MainActivity : TauriActivity() {
     fun sharedFileConsumed() {
       pendingShare = null
     }
+
+    /** Pending inbound App-Link URL, consumed on read ('' when none). A URL is small,
+     *  so no chunk protocol - one string, one call. */
+    @JavascriptInterface
+    fun pendingDeepLink(): String {
+      val link = pendingLink ?: return ""
+      pendingLink = null
+      return link
+    }
   }
 
   companion object {
     private const val MAX_SHARE_BYTES = 48L * 1024 * 1024
     private const val SHARE_CHUNK = 1024 * 1024
+    // Generous vs the engine's 4096 URL cap - a packed z link plus headroom.
+    private const val MAX_LINK_CHARS = 8192
   }
 }
