@@ -4,6 +4,8 @@ import { existsSync } from 'node:fs';
 import {
   embedContentPlugins, injectModelsBase, resolveEmbedMode,
 } from '../tauri-shared/vite-embed.mjs';
+// Borrowed from the web shell's config, which owns the format. See the plugin list.
+import { precacheManifest } from '../web/vite.config.js';
 
 const webShell  = resolve(__dirname, '../web');
 const repoRoot  = resolve(__dirname, '../..');
@@ -104,6 +106,12 @@ export default defineConfig({
       outDirDefault: resolve(__dirname, 'dist'),
       mode: EMBED_CATALOG,
     }),
+    // LAST: it scans the finished dist/, so it must run after embedContentPlugins'
+    // pruneEmbeddedDownloads has removed dist/models/. Without it there is no
+    // dist/precache.json, and every row of the "Available offline" manager is gated on
+    // that file (partAvailable in views/profile.ts) - so the whole model list reads
+    // "Not offered by this server" even when the model host is serving fine.
+    precacheManifest(),
   ],
   // Match shells/web/vite.config.js: the web shell renders ZzFXM songs and encodes
   // video in MODULE workers (src/lib/zzfxm-worker.ts, src/bridge/video-encode.worker.ts),
