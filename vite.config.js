@@ -78,7 +78,7 @@ function overrideBridgeModules(map) {
 // strips dist/models/), so the on-device ML models must be fetched from a
 // model host at runtime rather than same-origin - exactly the desktop
 // arrangement. An override may be passed in the environment (VITE_MODELS_BASE).
-const MODELS_HOST = process.env.VITE_MODELS_BASE ?? 'https://lolly.tools';
+const MODELS_HOST = process.env.VITE_MODELS_BASE ?? 'https://lolli.li';
 
 export default defineConfig({
   root: webShell,
