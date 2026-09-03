@@ -74,6 +74,15 @@ What is hand-maintained in there:
 - **`app/src/main/java/tools/lolly/mobile/MainActivity.kt`** extends `TauriActivity` and does two jobs. Inbound: it handles `ACTION_SEND` and `ACTION_SEND_MULTIPLE`, reads the shared file into a capped in-memory slot and exposes it to the WebView through a `@JavascriptInterface` object registered as **`LollyShare`**, which the web shell's share-target ingest polls. It only ingests on a genuinely fresh launch, because after a process death Android redelivers its own persisted launch Intent, which is still the original `ACTION_SEND`, and would otherwise resurrect an already-handled share. Outbound: `shareFile()` fires `ACTION_SEND` through a `FileProvider`, which is what the `export` override calls after saving.
 - **`AndroidManifest.xml`** carries the `SEND` intent filter and the `FileProvider` declaration, and **`res/xml/file_paths.xml`** the provider paths.
 
+## Deep links: `lolly://` and App Links
+
+Both mobile apps open the `lolly://` scheme (the grammar is in `docs/url-mode.md`, the mapper in `shells/web/src/lib/deep-link.ts`), and Android also opens `https://lolly.tools/t/…` App Links (plan 171, pending the `assetlinks.json` fingerprint).
+
+- **Android** - `AndroidManifest.xml` carries a `BROWSABLE` VIEW filter for the scheme beside the App-Link filter; `MainActivity.ingestViewIntent` stashes either kind of link on the `LollyShare` bridge (`pendingDeepLink`, latest wins, consumed on read) and fires the `lolly-deep-link` window event when the app is already running.
+- **iOS** - `gen/apple/lolly-mobile_iOS/Info.plist` declares `CFBundleURLTypes` for the scheme; iOS delivers an open as `RunEvent::Opened`, which `src/lib.rs` queues in `MobileEvents`, and the web shell drains through the `mobile_poll_events` command.
+
+The web side is one function, `initDeepLinkIntake` in `shells/web/src/lib/drop-router.ts`: it prefers the Android bridge and polls the Rust queue only where that bridge is absent, so a link that arrives before the web shell boots is not lost on either platform.
+
 ## Run it
 
 ```bash

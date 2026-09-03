@@ -37,6 +37,15 @@
                 <data android:pathPrefix="/t/" />
                 <data android:path="/design" />
             </intent-filter>
+            <!-- lolly:// (plans/174): the app's own routes under a scheme, for a link
+                 from another app, a shortcut or a QR code that names a tool directly. No
+                 host, so it needs no assetlinks verification. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="lolly" />
+            </intent-filter>
             <!-- Inbound share target: broad on purpose so Lolly appears wherever files are
                  shared. SEND_MULTIPLE is accepted but only the first stream is imported (v1). -->
             <intent-filter>

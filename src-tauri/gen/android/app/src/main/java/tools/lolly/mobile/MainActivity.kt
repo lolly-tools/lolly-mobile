@@ -118,14 +118,16 @@ class MainActivity : TauriActivity() {
     }.start()
   }
 
-  /** Inbound ACTION_VIEW App Link (plan 171): stash the https URL for the JS side,
-   *  which maps its path+query+hash onto the in-app route. Same latest-wins slot +
-   *  cold-poll/warm-event pattern as the share target. Defensive re-checks even
-   *  though the manifest filter already scopes host and scheme. */
+  /** Inbound ACTION_VIEW link: an https App Link (plan 171), whose path+query+hash
+   *  the JS side maps onto the in-app route, or a lolly:// deep link (plans/174),
+   *  which it maps through the shared scheme grammar. Stashed as-is; same
+   *  latest-wins slot + cold-poll/warm-event pattern as the share target.
+   *  Defensive re-checks even though the manifest filters already scope host and
+   *  scheme. */
   private fun ingestViewIntent(intent: Intent?) {
     if (intent?.action != Intent.ACTION_VIEW) return
     val uri = intent.data ?: return
-    if (uri.scheme != "https" && uri.scheme != "http") return
+    if (uri.scheme != "https" && uri.scheme != "http" && uri.scheme != "lolly") return
     val url = uri.toString()
     if (url.length > MAX_LINK_CHARS) return
     // Consume so an activity recreate doesn't re-open the same link.

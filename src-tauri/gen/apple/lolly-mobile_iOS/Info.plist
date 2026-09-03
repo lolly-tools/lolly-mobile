@@ -17,6 +17,22 @@
 			</array>
 		</dict>
 	</array>
+	<!-- lolly:// deep links (plans/174): the app's own routes under a scheme, so a
+	     Shortcut, another app or a QR code can open a tool with its inputs filled.
+	     Delivered to Rust as RunEvent::Opened (src/lib.rs) and polled by the web shell. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>tools.lolly.deeplink</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>lolly</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
