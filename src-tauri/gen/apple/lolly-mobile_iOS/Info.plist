@@ -7,14 +7,45 @@
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>lolly</string>
+			</array>
 			<key>CFBundleTypeName</key>
-			<string>Lolly Pack</string>
+			<string>Lolly bundle</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>LSHandlerRank</key>
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>tools.lolly.pack</string>
 			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>penpot</string>
+				<string>fig</string>
+				<string>idml</string>
+				<string>ai</string>
+				<string>svg</string>
+				<string>pdf</string>
+				<string>xlsx</string>
+				<string>csv</string>
+				<string>tsv</string>
+				<string>pptx</string>
+				<string>docx</string>
+				<string>psd</string>
+				<string>psb</string>
+				<string>xcf</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Document Lolly can open</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
 		</dict>
 	</array>
 	<!-- lolly:// deep links (plans/174): the app's own routes under a scheme, so a
@@ -124,7 +155,7 @@
 				<string>public.archive</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>Lolly Pack</string>
+			<string>Lolly bundle (session share or brand pack)</string>
 			<key>UTTypeIdentifier</key>
 			<string>tools.lolly.pack</string>
 			<key>UTTypeTagSpecification</key>

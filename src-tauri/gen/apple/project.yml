@@ -89,16 +89,22 @@ targets:
         # Files app (On My iPhone -> Lolly) so a saved export is findable.
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
-        # The .lolly pack/share type (plans/131): Lolly appears in Files/Mail
-        # "Open with". Receiving the opened file is the wave-3 handler; the
-        # in-app Open button already imports via the document picker.
+        # .lolly is Lolly's owned pack/share type. The second entry is a lower-
+        # priority Open With safety net for formats the on-device router really
+        # imports; no Lolly icon is assigned to those foreign formats.
         CFBundleDocumentTypes:
-          - CFBundleTypeName: Lolly Pack
+          - CFBundleTypeName: Lolly bundle
+            CFBundleTypeExtensions: [lolly]
+            CFBundleTypeRole: Editor
             LSHandlerRank: Owner
             LSItemContentTypes: [tools.lolly.pack]
+          - CFBundleTypeName: Document Lolly can open
+            CFBundleTypeExtensions: [penpot, fig, idml, ai, svg, pdf, xlsx, csv, tsv, pptx, docx, psd, psb, xcf]
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Alternate
         UTExportedTypeDeclarations:
           - UTTypeIdentifier: tools.lolly.pack
-            UTTypeDescription: Lolly Pack
+            UTTypeDescription: Lolly bundle (session share or brand pack)
             UTTypeConformsTo: [public.data, public.archive]
             UTTypeTagSpecification:
               public.filename-extension: [lolly]

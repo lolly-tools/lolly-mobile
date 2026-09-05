@@ -51,12 +51,13 @@ const EMBED_CATALOG = resolveEmbedMode(process.env.LOLLY_EMBED_CATALOG, 'neutral
 // (`vite build`) and the root-relative URL importer the dev server passes
 // (`/src/bridge/index.js`).
 //
-// Mobile overrides state.js (filesystem state via tauri-plugin-fs),
-// capabilities-provided.js (adds 'filesystem'), export.js and site-fetch.js. It
-// does NOT yet override capture.js: bridge-overrides/capture.ts is staged for
-// url-shot-on-iOS, but the native command it invokes isn't built yet (objc2-web-kit's
-// WKWebView is macOS-only; see capabilities-provided.ts), so mobile keeps the web
-// capture.ts stub and 'capture' stays unavailable.
+// Mobile overrides three modules: state.js (filesystem state via
+// tauri-plugin-fs), capabilities-provided.js (adds 'filesystem') and export.js.
+// It does NOT override capture.js. A mobile capture override was staged for
+// url-shot-on-iOS and deleted 2026-09-05: the native command it invoked was
+// never built (objc2-web-kit's WKWebView is macOS-only; see
+// capabilities-provided.ts), so mobile keeps the web stub and 'capture' stays
+// unavailable.
 function overrideBridgeModules(map) {
   return {
     name: 'override-bridge-modules',
@@ -90,16 +91,11 @@ export default defineConfig({
       'state': resolve(__dirname, 'bridge-overrides/state.ts'),
       'capabilities-provided': resolve(__dirname, 'bridge-overrides/capabilities-provided.ts'),
       'export': resolve(__dirname, 'bridge-overrides/export.ts'),
-      // Native website read for the Design System studio's Website source
-      // (plans/97 section 9): a Rust `site_fetch` command, no CSP and no CORS in the
-      // way. Unlike 'capture', mobile DOES ship this: a site fetch needs only an
-      // HTTP client, not a headless Chrome.
-      //
-      // THIS KEY MATCHES NOTHING TODAY (checked 2026-08-09; see the desktop
-      // config's identical entry for the full story). The web shell probes
-      // __TAURI_INTERNALS__.invoke at runtime instead, so the tile works
-      // regardless; the key waits for a shells/web/src/bridge/site-fetch.ts.
-      'site-fetch': resolve(__dirname, 'bridge-overrides/site-fetch.ts'),
+      // There used to be a 'site-fetch' entry here, for a
+      // shells/web/src/bridge/site-fetch.ts that was never added. Removed
+      // 2026-09-05 (dead: the map key matched no web module, so it never fired).
+      // The Website source reaches the native site_fetch command a different
+      // way - see README.md, "Website source transport".
     }),
     ...embedContentPlugins({
       repoRoot,

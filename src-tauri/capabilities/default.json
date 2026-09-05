@@ -9,17 +9,21 @@
     "fs:allow-write-file",
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
-    "fs:allow-create",
-    "fs:allow-rename",
     "fs:allow-remove",
     "fs:allow-mkdir",
     "fs:allow-read-dir",
-    "fs:scope-appdata-recursive",
-    "fs:scope-download-recursive",
-    "fs:scope-document-recursive",
     {
-      "identifier": "http:default",
-      "allow": [{ "url": "https://*:*" }]
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "$APPDATA/saved-state" },
+        { "path": "$APPDATA/saved-state/**" },
+        { "path": "$APPDATA/pack-store" },
+        { "path": "$APPDATA/pack-store/**" },
+        { "path": "$DOWNLOAD/Lolly" },
+        { "path": "$DOWNLOAD/Lolly/**" },
+        { "path": "$DOCUMENT/Lolly" },
+        { "path": "$DOCUMENT/Lolly/**" }
+      ]
     }
   ]
 }

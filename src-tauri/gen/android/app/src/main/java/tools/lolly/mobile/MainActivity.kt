@@ -104,7 +104,13 @@ class MainActivity : TauriActivity() {
     // Files only in v1 (EXTRA_TEXT-only shares ignored); content:// only - a file:// Uri
     // from another app could point into our own private storage.
     if (uri == null || uri.scheme != "content") return
-    val intentType = intent.type
+    stashInboundFile(uri, intent.type)
+  }
+
+  /** Read one provider-backed document into the same bounded slot used by the
+   *  Android share target. ACTION_SEND and an ACTION_VIEW from Files therefore
+   *  reach one JS intake and one universal Lolly chooser. */
+  private fun stashInboundFile(uri: Uri, intentType: String?) {
     Thread {
       val name = shareDisplayName(uri)
       val mime = shareMime(intentType, uri)
@@ -118,15 +124,20 @@ class MainActivity : TauriActivity() {
     }.start()
   }
 
-  /** Inbound ACTION_VIEW link: an https App Link (plan 171), whose path+query+hash
-   *  the JS side maps onto the in-app route, or a lolly:// deep link (plans/174),
-   *  which it maps through the shared scheme grammar. Stashed as-is; same
-   *  latest-wins slot + cold-poll/warm-event pattern as the share target.
-   *  Defensive re-checks even though the manifest filters already scope host and
-   *  scheme. */
+  /** Inbound ACTION_VIEW: provider-backed .lolly documents from Files use the
+   *  share-target byte slot; https App Links and lolly:// deep links use the URL
+   *  slot. Both keep the same latest-wins + cold-poll/warm-event pattern.
+   *  Defensive re-checks even though the manifest filters already scope them. */
   private fun ingestViewIntent(intent: Intent?) {
     if (intent?.action != Intent.ACTION_VIEW) return
     val uri = intent.data ?: return
+    if (uri.scheme == "content") {
+      // Consume before starting the reader so an activity recreation cannot
+      // re-import the same document while the stream is in flight.
+      setIntent(Intent(this, javaClass))
+      stashInboundFile(uri, intent.type)
+      return
+    }
     if (uri.scheme != "https" && uri.scheme != "http" && uri.scheme != "lolly") return
     val url = uri.toString()
     if (url.length > MAX_LINK_CHARS) return
