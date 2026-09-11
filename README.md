@@ -132,6 +132,26 @@ pnpm run build:frontend  # frontend only, into ./dist
 
 Android needs the SDK, NDK and a JDK; iOS needs Xcode and `minimumSystemVersion` 14.3 or later per `tauri.conf.json`.
 
+**The JDK must be 17-24.** Gradle 8.14.3 (pinned in `gen/android/gradle/wrapper/gradle-wrapper.properties`) does not support Java 25, and AGP 8.11 needs 17 or newer. This bites by default on distributions that ship a newer JDK as their only one - Fedora 45 ships Java 25 - and the failure is close to undiagnosable on sight:
+
+```
+A problem occurred configuring project ':buildSrc'.
+> 25.0.4.1
+```
+
+That version string is the whole message: no cause, no supported range, no remedy. Worse, it arrives only *after* cargo has built all four Android targets, so a cold tree spends ~25 minutes to get there. And `./gradlew --version` is **not** a valid pre-check - it runs happily under an unsupported JDK, because it only exercises the launcher; only project configuration fails.
+
+`build:android` and `dev:android` therefore run `check:jdk` (`scripts/check-android-jdk.mjs`) first, which names the version it found and the range it needs. If your system JDK is out of range, install one alongside it and point `JAVA_HOME` at it for the build only:
+
+```bash
+curl -fsSL -o jdk.tar.gz \
+  "https://api.adoptium.net/v3/binary/latest/21/ga/linux/x64/jdk/hotspot/normal/eclipse"
+mkdir -p ~/.local/jdk && tar -xzf jdk.tar.gz -C ~/.local/jdk
+JAVA_HOME=~/.local/jdk/jdk-21.0.12.1+1 pnpm run build:android
+```
+
+Bump `MAX` in that script when the Gradle wrapper moves.
+
 `tsconfig.json` here typechecks `bridge-overrides/` only - the frontend is covered by `tsc -p shells/web`. It is reached from the umbrella's `pnpm run typecheck` through `scripts/typecheck-tauri.ts` rather than as a bare `tsc -p` step, because the overrides import `@tauri-apps/api` and `@tauri-apps/plugin-fs` and **this shell is a separate pnpm project**, so a root `pnpm install --frozen-lockfile` never creates its `node_modules`. That script SKIPS with a logged reason when they are absent, so a plain clone is not punished; CI installs both Tauri shells (`--prod`) and then re-runs it with `--strict`, which fails on a skip, so the gate cannot quietly become a no-op. To run it locally:
 
 ```bash
